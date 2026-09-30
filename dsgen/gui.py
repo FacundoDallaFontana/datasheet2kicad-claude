@@ -1,4 +1,4 @@
-"""GUI simple (Tkinter): elegir PDF + part number + carpeta, revisar lo extraído y generar."""
+"""Simple GUI (Tkinter): pick the PDF + part number + folder, review the extraction and generate."""
 from __future__ import annotations
 
 import queue
@@ -21,10 +21,10 @@ from .validate import Issue, check
 PIN_COLUMNS = ("number", "name", "type", "side", "unit", "style")
 PIN_CHOICES = {"type": get_args(PinType), "side": get_args(Side), "style": get_args(PinStyle)}
 DIM_FIELDS = [
-    ("body_x", "Cuerpo X (E1)"), ("body_y", "Cuerpo Y (D)"), ("overall_x", "Total X (E)"),
-    ("overall_y", "Total Y (QFP)"), ("body_height", "Altura (A)"), ("lead_width", "Ancho terminal (b)"),
-    ("lead_len", "Largo terminal (L)"), ("ep.x", "EP X (E2)"), ("ep.y", "EP Y (D2)"),
-    ("tab.width", "Tab ancho"), ("tab.length", "Tab largo"),
+    ("body_x", "Body X (E1)"), ("body_y", "Body Y (D)"), ("overall_x", "Overall X (E)"),
+    ("overall_y", "Overall Y (QFP)"), ("body_height", "Height (A)"), ("lead_width", "Lead width (b)"),
+    ("lead_len", "Lead length (L)"), ("ep.x", "EP X (E2)"), ("ep.y", "EP Y (D2)"),
+    ("tab.width", "Tab width"), ("tab.length", "Tab length"),
 ]
 RED = "#c62828"
 
@@ -41,13 +41,12 @@ def _fmt(v) -> str:
 class App(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
-        self.title("dsgen — datasheet → símbolo y footprint de KiCad")
+        self.title("dsgen — datasheet → KiCad symbol and footprint")
         self.geometry("1100x760")
         self.minsize(900, 600)
         self.component: Optional[Component] = None
         self.msgs: queue.Queue = queue.Queue()
         self._images: list[tk.PhotoImage] = []
-        self._editor: Optional[tk.Widget] = None
         self._build_inputs()
         self._build_tabs()
         self._build_actions()
@@ -55,7 +54,7 @@ class App(tk.Tk):
 
     # ------------------------------------------------------------------ layout
     def _build_inputs(self) -> None:
-        f = ttk.LabelFrame(self, text="1. Entrada", padding=8)
+        f = ttk.LabelFrame(self, text="1. Input", padding=8)
         f.pack(fill="x", padx=8, pady=(8, 4))
         f.columnconfigure(1, weight=1)
         self.pdf_var, self.part_var = tk.StringVar(), tk.StringVar()
@@ -65,30 +64,30 @@ class App(tk.Tk):
 
         ttk.Label(f, text="Datasheet (PDF)").grid(row=0, column=0, sticky="w")
         ttk.Entry(f, textvariable=self.pdf_var).grid(row=0, column=1, sticky="ew", padx=4)
-        ttk.Button(f, text="Examinar…", command=self._pick_pdf).grid(row=0, column=2)
-        ttk.Label(f, text="Part number completo").grid(row=1, column=0, sticky="w")
+        ttk.Button(f, text="Browse…", command=self._pick_pdf).grid(row=0, column=2)
+        ttk.Label(f, text="Full part number").grid(row=1, column=0, sticky="w")
         ttk.Entry(f, textvariable=self.part_var).grid(row=1, column=1, sticky="ew", padx=4)
-        ttk.Label(f, text="p.ej. TPS62130RGTR (el sufijo define el package)",
+        ttk.Label(f, text="e.g. TPS62130RGTR (the suffix defines the package)",
                   foreground="gray").grid(row=1, column=2, sticky="w")
-        ttk.Label(f, text="Carpeta de salida").grid(row=2, column=0, sticky="w")
+        ttk.Label(f, text="Output folder").grid(row=2, column=0, sticky="w")
         ttk.Entry(f, textvariable=self.out_var).grid(row=2, column=1, sticky="ew", padx=4)
-        ttk.Button(f, text="Examinar…", command=self._pick_out).grid(row=2, column=2)
+        ttk.Button(f, text="Browse…", command=self._pick_out).grid(row=2, column=2)
 
         opts = ttk.Frame(f)
         opts.grid(row=3, column=0, columnspan=3, sticky="w", pady=(6, 0))
-        ttk.Label(opts, text="Librería").pack(side="left")
+        ttk.Label(opts, text="Library").pack(side="left")
         ttk.Entry(opts, textvariable=self.lib_var, width=14).pack(side="left", padx=(4, 12))
-        ttk.Label(opts, text="Modelo").pack(side="left")
+        ttk.Label(opts, text="Model").pack(side="left")
         model_box = ttk.Combobox(opts, textvariable=self.model_var, values=MODELS, width=8, state="readonly")
         model_box.pack(side="left", padx=(4, 12))
         model_box.bind("<<ComboboxSelected>>", lambda _: self.model_var.get() == "haiku" and self.status.configure(
-            text="Haiku: lee bien los pines pero comete errores en los dibujos mecánicos; revisá el package."))
-        ttk.Checkbutton(opts, text="Forzar re-extracción", variable=self.force_var).pack(side="left", padx=4)
-        ttk.Checkbutton(opts, text="Usar footprint oficial de KiCad si existe",
+            text="Haiku reads pins well but makes mistakes on mechanical drawings; check the package."))
+        ttk.Checkbutton(opts, text="Force re-extraction", variable=self.force_var).pack(side="left", padx=4)
+        ttk.Checkbutton(opts, text="Use the official KiCad footprint if one exists",
                         variable=self.official_var).pack(side="left", padx=4)
-        self.extract_btn = ttk.Button(opts, text="Extraer con IA", command=self._extract)
+        self.extract_btn = ttk.Button(opts, text="Extract with AI", command=self._extract)
         self.extract_btn.pack(side="left", padx=(16, 4))
-        ttk.Button(opts, text="Abrir JSON…", command=self._open_json).pack(side="left")
+        ttk.Button(opts, text="Open JSON…", command=self._open_json).pack(side="left")
 
     def _build_tabs(self) -> None:
         self.nb = ttk.Notebook(self)
@@ -114,15 +113,15 @@ class App(tk.Tk):
         bar.grid(row=1, column=0, sticky="w", pady=4)
         ttk.Button(bar, text="+ Pin", command=self._add_pin).pack(side="left")
         ttk.Button(bar, text="− Pin", command=self._del_pin).pack(side="left", padx=4)
-        ttk.Label(bar, text="Doble clic en una celda para editarla.", foreground="gray").pack(side="left", padx=8)
+        ttk.Label(bar, text="Double-click a cell to edit it.", foreground="gray").pack(side="left", padx=8)
         self.tree.bind("<Double-1>", self._edit_cell)
-        self.nb.add(pins, text="Pines")
+        self.nb.add(pins, text="Pins")
 
         self._build_package_tab()
         self._build_info_tab()
 
         prev = ttk.Frame(self.nb, padding=8)
-        self.sym_img = ttk.Label(prev, text="(símbolo)", anchor="center")
+        self.sym_img = ttk.Label(prev, text="(symbol)", anchor="center")
         self.fp_img = ttk.Label(prev, text="(footprint)", anchor="center")
         self.sym_img.pack(side="left", fill="both", expand=True)
         self.fp_img.pack(side="left", fill="both", expand=True)
@@ -132,9 +131,9 @@ class App(tk.Tk):
         f = ttk.Frame(self.nb, padding=8)
         self.pkg_vars: dict[str, tk.Variable] = {}
         self.pkg_labels: dict[str, ttk.Label] = {}
-        top = [("family", "Familia"), ("name", "Nombre"), ("pin_count", "Pines (sin EP/tab)"),
-               ("pitch", "Pitch"), ("num_pins_x", "Pines por lado X"), ("num_pins_y", "Pines por lado Y"),
-               ("deleted_pins", "Posiciones borradas"), ("confidence", "Confianza")]
+        top = [("family", "Family"), ("name", "Name"), ("pin_count", "Pins (no EP/tab)"),
+               ("pitch", "Pitch"), ("num_pins_x", "Pins per side X"), ("num_pins_y", "Pins per side Y"),
+               ("deleted_pins", "Deleted positions"), ("confidence", "Confidence")]
         for i, (key, label) in enumerate(top):
             lbl = ttk.Label(f, text=label)
             lbl.grid(row=i // 2, column=(i % 2) * 2, sticky="w", padx=(0, 4), pady=2)
@@ -149,7 +148,7 @@ class App(tk.Tk):
                 w = ttk.Entry(f, textvariable=var, width=22)
             w.grid(row=i // 2, column=(i % 2) * 2 + 1, sticky="w", pady=2, padx=(0, 24))
 
-        dims = ttk.LabelFrame(f, text="Dimensiones (mm)", padding=6)
+        dims = ttk.LabelFrame(f, text="Dimensions (mm)", padding=6)
         dims.grid(row=5, column=0, columnspan=4, sticky="w", pady=(10, 0))
         for j, h in enumerate(("", "min", "nom", "max")):
             ttk.Label(dims, text=h).grid(row=0, column=j)
@@ -167,9 +166,9 @@ class App(tk.Tk):
         extra.grid(row=6, column=0, columnspan=4, sticky="w", pady=(8, 0))
         self.has_ep, self.has_tab = tk.BooleanVar(), tk.BooleanVar()
         self.ep_num, self.tab_num = tk.StringVar(), tk.StringVar()
-        ttk.Checkbutton(extra, text="Tiene exposed pad, pin nº", variable=self.has_ep).pack(side="left")
+        ttk.Checkbutton(extra, text="Has exposed pad, pin no.", variable=self.has_ep).pack(side="left")
         ttk.Entry(extra, textvariable=self.ep_num, width=6).pack(side="left", padx=(2, 20))
-        ttk.Checkbutton(extra, text="Tiene tab, pin nº", variable=self.has_tab).pack(side="left")
+        ttk.Checkbutton(extra, text="Has tab, pin no.", variable=self.has_tab).pack(side="left")
         ttk.Entry(extra, textvariable=self.tab_num, width=6).pack(side="left", padx=2)
         self.nb.add(f, text="Package")
 
@@ -177,9 +176,9 @@ class App(tk.Tk):
         f = ttk.Frame(self.nb, padding=8)
         f.columnconfigure(1, weight=1)
         self.info_vars: dict[str, tk.StringVar] = {}
-        fields = [("part_number", "Part number"), ("symbol_name", "Nombre del símbolo"),
-                  ("manufacturer", "Fabricante"), ("description", "Descripción"), ("keywords", "Keywords"),
-                  ("datasheet_url", "Datasheet URL"), ("reference", "Referencia")]
+        fields = [("part_number", "Part number"), ("symbol_name", "Symbol name"),
+                  ("manufacturer", "Manufacturer"), ("description", "Description"), ("keywords", "Keywords"),
+                  ("datasheet_url", "Datasheet URL"), ("reference", "Reference")]
         for i, (key, label) in enumerate(fields):
             ttk.Label(f, text=label).grid(row=i, column=0, sticky="w", pady=1)
             var = tk.StringVar()
@@ -187,7 +186,7 @@ class App(tk.Tk):
             self.info_vars[key] = var
         self.pages_frame = ttk.Frame(f)
         self.pages_frame.grid(row=len(fields), column=0, columnspan=2, sticky="w", pady=6)
-        ttk.Label(f, text="Problemas y notas").grid(row=len(fields) + 1, column=0, sticky="nw")
+        ttk.Label(f, text="Issues and notes").grid(row=len(fields) + 1, column=0, sticky="nw")
         self.issues_box = ScrolledText(f, height=12, font=("Segoe UI", 9), state="disabled")
         self.issues_box.grid(row=len(fields) + 1, column=1, sticky="nsew")
         self.issues_box.tag_configure("error", foreground=RED)
@@ -198,30 +197,30 @@ class App(tk.Tk):
     def _build_actions(self) -> None:
         f = ttk.Frame(self, padding=(8, 0, 8, 8))
         f.pack(fill="x")
-        ttk.Button(f, text="Validar", command=self._validate).pack(side="left")
-        self.gen_btn = ttk.Button(f, text="Generar símbolo + footprint", command=self._generate)
+        ttk.Button(f, text="Validate", command=self._validate).pack(side="left")
+        self.gen_btn = ttk.Button(f, text="Generate symbol + footprint", command=self._generate)
         self.gen_btn.pack(side="left", padx=6)
-        self.status = ttk.Label(f, text="Elegí un PDF y el part number.", foreground="gray")
+        self.status = ttk.Label(f, text="Pick a PDF and enter the part number.", foreground="gray")
         self.status.pack(side="left", padx=12)
 
         u = ttk.Frame(self, padding=(8, 0, 8, 6))
         u.pack(fill="x")
         self.usage_lbl = ttk.Label(u, foreground="gray")
         self.usage_lbl.pack(side="left")
-        ttk.Button(u, text="Ver detalle (CSV)", command=self._open_usage).pack(side="right")
+        ttk.Button(u, text="View details (CSV)", command=self._open_usage).pack(side="right")
         self._refresh_usage()
 
     def _refresh_usage(self) -> None:
         from . import usage
-        self.usage_lbl.configure(text="Consumo acumulado: " + usage.summary().describe())
+        self.usage_lbl.configure(text="Accumulated usage: " + usage.summary().describe())
 
     def _open_usage(self) -> None:
         import os
         from . import usage
         if usage.USAGE_FILE.exists():
-            os.startfile(usage.USAGE_FILE)  # abre con Excel / editor por defecto
+            os.startfile(usage.USAGE_FILE)  # opens with Excel / the default editor
         else:
-            messagebox.showinfo("dsgen", "Todavía no hay extracciones registradas.")
+            messagebox.showinfo("dsgen", "No extractions recorded yet.")
 
     # ------------------------------------------------------------------ helpers
     def _log(self, text: str) -> None:
@@ -247,7 +246,7 @@ class App(tk.Tk):
             try:
                 result = work()
                 self.msgs.put(("call", lambda: done(result, None)))
-            except Exception as e:  # noqa: BLE001 - se muestra al usuario
+            except Exception as e:  # noqa: BLE001 - shown to the user
                 self._log(traceback.format_exc())
                 self.msgs.put(("call", lambda: done(None, e)))
         threading.Thread(target=runner, daemon=True).start()
@@ -262,20 +261,20 @@ class App(tk.Tk):
         if p:
             self.out_var.set(p)
 
-    # ------------------------------------------------------------------ extracción
+    # ------------------------------------------------------------------ extraction
     def _extract(self) -> None:
         pdf, part = Path(self.pdf_var.get().strip()), self.part_var.get().strip()
         if not pdf.is_file():
-            messagebox.showerror("dsgen", "Elegí un PDF válido.")
+            messagebox.showerror("dsgen", "Pick a valid PDF.")
             return
         if not part:
-            messagebox.showerror("dsgen", "El part number completo es obligatorio: el datasheet suele "
-                                          "cubrir varias variantes y packages.")
+            messagebox.showerror("dsgen", "The full part number is required: a datasheet usually "
+                                          "covers several variants and packages.")
             return
         from .pipeline import extract_component
 
         self.extract_btn.configure(state="disabled")
-        self.status.configure(text="Extrayendo con Claude… (puede tardar 1-3 minutos)")
+        self.status.configure(text="Extracting with Claude… (may take 1-3 minutes)")
         self.nb.select(0)
         self._log(f"== {pdf.name} / {part}")
         model, force = self.model_var.get(), self.force_var.get()
@@ -285,7 +284,7 @@ class App(tk.Tk):
         self.extract_btn.configure(state="normal")
         self._refresh_usage()
         if error:
-            self.status.configure(text="Error en la extracción.")
+            self.status.configure(text="Extraction error.")
             msg = str(error) if isinstance(error, ExtractionError) else repr(error)
             messagebox.showerror("dsgen", msg[:1500])
             return
@@ -296,18 +295,18 @@ class App(tk.Tk):
             return
         self._load_component(component, issues)
         n_err = sum(i.severity == "error" for i in issues)
-        self.status.configure(text=f"Extracción lista: revisá los datos ({n_err} errores).")
+        self.status.configure(text=f"Extraction done: review the data ({n_err} errors).")
         self.nb.select(1)
 
     def _choose_candidate(self, component: Component) -> None:
-        msg = ("No se encontró ese part number en el datasheet." if component.status == "part_not_found"
-               else "El part number es ambiguo.")
+        msg = ("That part number was not found in the datasheet." if component.status == "part_not_found"
+               else "The part number is ambiguous.")
         if not component.candidates:
             messagebox.showwarning("dsgen", msg + "\n" + "\n".join(component.notes))
             return
         win = tk.Toplevel(self)
-        win.title("Elegí el part number")
-        ttk.Label(win, text=msg + " Candidatos en el datasheet:", padding=8).pack()
+        win.title("Pick the part number")
+        ttk.Label(win, text=msg + " Candidates in the datasheet:", padding=8).pack()
         lb = tk.Listbox(win, height=min(12, len(component.candidates)), width=40)
         for c in component.candidates:
             lb.insert("end", c)
@@ -318,7 +317,7 @@ class App(tk.Tk):
                 self.part_var.set(lb.get(lb.curselection()[0]))
                 win.destroy()
                 self._extract()
-        ttk.Button(win, text="Usar este y extraer", command=use).pack(pady=8)
+        ttk.Button(win, text="Use this one and extract", command=use).pack(pady=8)
 
     def _open_json(self) -> None:
         p = filedialog.askopenfilename(filetypes=[("component.json", "*.json")])
@@ -327,7 +326,7 @@ class App(tk.Tk):
         try:
             component = Component.model_validate_json(Path(p).read_text(encoding="utf-8"))
         except ValidationError as e:
-            messagebox.showerror("dsgen", f"JSON inválido:\n{e}")
+            messagebox.showerror("dsgen", f"Invalid JSON:\n{e}")
             return
         self.out_var.set(str(Path(p).parent))
         self._load_component(component, check(component))
@@ -359,7 +358,7 @@ class App(tk.Tk):
 
         for w in self.pages_frame.winfo_children():
             w.destroy()
-        ttk.Label(self.pages_frame, text="Abrir PDF en:").pack(side="left")
+        ttk.Label(self.pages_frame, text="Open PDF at:").pack(side="left")
         for section, pages in c.source_pages.model_dump().items():
             for page in pages:
                 ttk.Button(self.pages_frame, text=f"{section} p.{page}",
@@ -378,7 +377,7 @@ class App(tk.Tk):
         return obj
 
     def _form_component(self) -> Component:
-        """Arma el Component desde el formulario (lo que el usuario revisó)."""
+        """Builds the Component from the form (what the user reviewed)."""
         base = self.component or Component(status="ok", part_number=self.part_var.get())
         pins = [Pin(number=str(v[0]), name=str(v[1]), type=v[2], side=v[3], unit=int(v[4] or 1), style=v[5])
                 for v in (self.tree.item(i, "values") for i in self.tree.get_children())]
@@ -407,7 +406,7 @@ class App(tk.Tk):
         info = {k: v.get().strip() for k, v in self.info_vars.items()}
         return base.model_copy(update={**info, "status": "ok", "pins": pins, "package": package})
 
-    # ------------------------------------------------------------------ validación
+    # ------------------------------------------------------------------ validation
     def _show_issues(self, issues: list[Issue], c: Component) -> None:
         bad_rows = {int(i.field[5:-1]) for i in issues if i.field.startswith("pins[")}
         for idx, item in enumerate(self.tree.get_children()):
@@ -420,16 +419,16 @@ class App(tk.Tk):
         box = self.issues_box
         box.configure(state="normal")
         box.delete("1.0", "end")
-        conf = f"Confianza — pines: {c.pins_confidence}"
+        conf = f"Confidence — pins: {c.pins_confidence}"
         if c.package:
             conf += f", package: {c.package.confidence} ({c.package.name})"
         box.insert("end", conf + "\n\n")
         if not issues:
-            box.insert("end", "Sin problemas en los chequeos de sanidad.\n")
+            box.insert("end", "No issues found by the sanity checks.\n")
         for issue in issues:
             box.insert("end", f"• {issue.field}: {issue.message}\n", issue.severity)
         if c.notes:
-            box.insert("end", "\nNotas de la IA:\n")
+            box.insert("end", "\nAI notes:\n")
             for n in c.notes:
                 box.insert("end", f"• {n}\n")
         box.configure(state="disabled")
@@ -438,12 +437,12 @@ class App(tk.Tk):
         try:
             c = self._form_component()
         except (ValidationError, ValueError) as e:
-            messagebox.showerror("dsgen", f"Datos inválidos en el formulario:\n{e}")
+            messagebox.showerror("dsgen", f"Invalid data in the form:\n{e}")
             return None
         issues = check(c)
         self._show_issues(issues, c)
         n_err = sum(i.severity == "error" for i in issues)
-        self.status.configure(text=f"Validación: {n_err} errores, {len(issues) - n_err} advertencias.")
+        self.status.configure(text=f"Validation: {n_err} errors, {len(issues) - n_err} warnings.")
         return c
 
     def _open_page(self, page: int) -> None:
@@ -451,7 +450,7 @@ class App(tk.Tk):
         if pdf.is_file():
             webbrowser.open(f"{pdf.resolve().as_uri()}#page={page}")
 
-    # ------------------------------------------------------------------ edición de pines
+    # ------------------------------------------------------------------ pin editing
     def _edit_cell(self, event) -> None:
         item, col = self.tree.identify_row(event.y), self.tree.identify_column(event.x)
         if not item or not col:
@@ -485,14 +484,14 @@ class App(tk.Tk):
         for item in self.tree.selection():
             self.tree.delete(item)
 
-    # ------------------------------------------------------------------ generación
+    # ------------------------------------------------------------------ generation
     def _generate(self) -> None:
         c = self._validate()
         if c is None:
             return
         errors = [i for i in check(c) if i.severity == "error"]
         if errors and not messagebox.askyesno(
-                "dsgen", f"Hay {len(errors)} errores de validación (ver pestaña Info). ¿Generar igual?"):
+                "dsgen", f"There are {len(errors)} validation errors (see the Info tab). Generate anyway?"):
             self.nb.select(3)
             return
         out = Path(self.out_var.get().strip() or "out")
@@ -500,7 +499,7 @@ class App(tk.Tk):
         use_official = self.official_var.get()
         self.gen_btn.configure(state="disabled")
         self.nb.select(0)
-        self._log(f"== Generando en {out}")
+        self._log(f"== Generating into {out}")
         self.component = c
         self._in_thread(lambda: self._generate_work(c, out, lib, use_official), self._generated)
 
@@ -521,29 +520,29 @@ class App(tk.Tk):
                 if fp:
                     mod = fp.generated_path or copy_official(fp.lib_id, kicad, tmp / "official.pretty")
                     pngs[1] = footprint_png(kicad, mod, tmp / "fp.png")
-            except Exception as e:  # noqa: BLE001 - el preview no es crítico
-                self._log(f"No se pudo generar el preview: {e}")
+            except Exception as e:  # noqa: BLE001 - the preview is not critical
+                self._log(f"Could not generate the preview: {e}")
         return result, pngs
 
     def _generated(self, result, error) -> None:
         self.gen_btn.configure(state="normal")
         if error:
-            self.status.configure(text="Error al generar.")
+            self.status.configure(text="Generation error.")
             messagebox.showerror("dsgen", str(error)[:1500])
             return
         gen, pngs = result
         self._images.clear()
-        for label, png, text in ((self.sym_img, pngs[0], "(símbolo)"), (self.fp_img, pngs[1], "(footprint)")):
+        for label, png, text in ((self.sym_img, pngs[0], "(symbol)"), (self.fp_img, pngs[1], "(footprint)")):
             if png and png.exists():
                 img = tk.PhotoImage(file=str(png))
                 self._images.append(img)
                 label.configure(image=img, text="")
             else:
-                label.configure(image="", text=text + "\nsin preview")
-        fp_txt = gen.footprint.lib_id if gen.footprint else "sin footprint"
-        self.status.configure(text=f"Listo: {gen.symbol_lib.name} → {fp_txt}")
-        self._log(f"Agregá {gen.symbol_lib} y la carpeta .pretty (si se generó) a las tablas de "
-                  f"librerías de KiCad.")
+                label.configure(image="", text=text + "\nno preview")
+        fp_txt = gen.footprint.lib_id if gen.footprint else "no footprint"
+        self.status.configure(text=f"Done: {gen.symbol_lib.name} → {fp_txt}")
+        self._log(f"Add {gen.symbol_lib} and the .pretty folder (if one was generated) to KiCad's "
+                  f"library tables.")
         self.nb.select(4)
 
 

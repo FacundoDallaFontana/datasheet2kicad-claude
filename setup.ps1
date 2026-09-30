@@ -1,5 +1,5 @@
-# Prepara el entorno: venv + kicad-footprint-generator (commit fijado) + dependencias.
-# Uso:  powershell -ExecutionPolicy Bypass -File setup.ps1
+# Sets up the environment: venv + kicad-footprint-generator (pinned commit) + dependencies.
+# Usage:  powershell -ExecutionPolicy Bypass -File setup.ps1
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
@@ -18,4 +18,4 @@ if (-not (Test-Path ".venv")) {
 .venv/Scripts/python -m pip install --upgrade pip
 .venv/Scripts/python -m pip install ./$KfgDir -e . pytest
 
-Write-Host "Listo. Abrir la GUI con:  .venv/Scripts/python -m dsgen"
+Write-Host "Done. Open the GUI with:  dsgen.bat  or  .venv/Scripts/python -m dsgen"

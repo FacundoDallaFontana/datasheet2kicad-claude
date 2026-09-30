@@ -1,7 +1,7 @@
-"""SOT-223 / TO-252 / TO-263: leads a la izquierda y tab a la derecha, con KicadModTree.
+"""SOT-223 / TO-252 / TO-263: leads on the left and tab on the right, built with KicadModTree.
 
-El generador oficial no cubre estos packages desde un spec genérico, así que calculamos el land
-pattern con las reglas IPC-7351B (densidad nominal) y dibujamos las capas según KLC.
+The official generator does not cover these packages from a generic spec, so we compute the land
+pattern with the IPC-7351B rules (nominal density) and draw the layers following KLC.
 """
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from pathlib import Path
 from ..schema import Package
 from . import init_kfg
 
-TOE, HEEL, SIDE = 0.35, 0.35, 0.05   # IPC-7351B gullwing, densidad nominal
+TOE, HEEL, SIDE = 0.35, 0.35, 0.05   # IPC-7351B gullwing, nominal density
 TAB_HEEL = 0.1
 DPAK_TAB_PROTRUSION = 1.0
 COURTYARD = 0.25
@@ -34,7 +34,7 @@ def footprint_name(pkg: Package) -> str:
 
 
 def build(pkg: Package, out_dir: Path) -> Path:
-    init_kfg(out_dir)  # carga la config global de KLC que usa KicadModTree
+    init_kfg(out_dir)  # loads the global KLC config used by KicadModTree
     from KicadModTree import (Footprint, FootprintType, KicadFileHandler, Line, Pad, Property,
                               Rectangle, RoundRadiusHandler, Text)
 
@@ -43,14 +43,14 @@ def build(pkg: Package, out_dir: Path) -> Path:
     ov_lo, ov_hi = pkg.overall_x.lo(), pkg.overall_x.hi()
     assert ov_lo and ov_hi
 
-    # --- pads de los leads (izquierda) ---
+    # --- lead pads (left) ---
     outer = ov_hi / 2 + TOE
     inner = ov_lo / 2 - pkg.lead_len.hi() - HEEL
     lead_len_pad, lead_x = outer - inner, -(outer + inner) / 2
     lead_w = pkg.lead_width.hi() + 2 * SIDE
     n = pkg.num_pins_y
 
-    # --- pad del tab (derecha) ---
+    # --- tab pad (right) ---
     tab_outer = ov_hi / 2 + TOE
     tab_inner = ov_lo / 2 - pkg.tab.length.hi() - TAB_HEEL
     tab_len_pad, tab_x = tab_outer - tab_inner, (tab_outer + tab_inner) / 2
@@ -75,9 +75,9 @@ def build(pkg: Package, out_dir: Path) -> Path:
                   at=[_r(tab_x), 0], size=[_r(tab_len_pad), _r(tab_w)],
                   layers=Pad.LAYERS_SMT, round_radius_handler=rrh))
 
-    # --- fab: cuerpo con chaflán de pin 1 ---
-    # SOT-223: el tab es un lead más, el cuerpo queda centrado. DPAK/D2PAK: el tab es el
-    # disipador bajo el cuerpo y sobresale ~1 mm (JEDEC TO-252 L3), así que el cuerpo va a la derecha.
+    # --- fab: body with pin 1 chamfer ---
+    # SOT-223: the tab is just another lead, so the body is centered. DPAK/D2PAK: the tab is the
+    # heatsink under the body and sticks out ~1 mm (JEDEC TO-252 L3), so the body shifts right.
     bx, by = pkg.body_x.nominal() / 2, pkg.body_y.nominal() / 2
     heatsink_tab = pkg.tab.length.hi() > 2 * pkg.lead_len.hi()
     cx = (pkg.overall_x.nominal() / 2 - DPAK_TAB_PROTRUSION - bx) if heatsink_tab else 0.0
@@ -88,9 +88,9 @@ def build(pkg: Package, out_dir: Path) -> Path:
         fp.append(Line(start=[_r(a[0]), _r(a[1])], end=[_r(b[0]), _r(b[1])], layer="F.Fab", width=FAB_W))
     body_x0, body_x1 = cx - bx, cx + bx
 
-    # --- silk: bordes superior e inferior del cuerpo; el superior se extiende hasta el pin 1 ---
+    # --- silk: top and bottom body edges; the top one extends to pin 1 ---
     sy = by + SILK_OFFSET
-    if sy > pads_bbox[3] + 0.2:  # solo si no pisa pads
+    if sy > pads_bbox[3] + 0.2:  # only if it does not overlap pads
         fp.append(Line(start=[_r(lead_x - lead_len_pad / 2), _r(-sy)],
                        end=[_r(body_x1 + SILK_OFFSET), _r(-sy)], layer="F.SilkS", width=SILK_W))
         fp.append(Line(start=[_r(body_x0 - SILK_OFFSET), _r(sy)], end=[_r(body_x1 + SILK_OFFSET), _r(sy)],

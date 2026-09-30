@@ -1,4 +1,4 @@
-"""component.package -> footprint (oficial de KiCad si existe uno equivalente, si no generado)."""
+"""component.package -> footprint (the official KiCad one if an equivalent exists, otherwise generated)."""
 from __future__ import annotations
 
 import re
@@ -19,10 +19,10 @@ class UnsupportedPackage(Exception):
 
 @dataclass
 class FootprintResult:
-    lib_id: str                          # valor de la propiedad Footprint del símbolo
-    generated_path: Optional[Path]       # None si se usa el footprint oficial
-    match: Optional[LibMatch]            # candidato oficial más cercano (aceptado o no)
-    pin_renames: dict[str, str] = field(default_factory=dict)  # a aplicar a los pines del símbolo
+    lib_id: str                          # value of the symbol's Footprint property
+    generated_path: Optional[Path]       # None when the official footprint is used
+    match: Optional[LibMatch]            # closest official candidate (accepted or not)
+    pin_renames: dict[str, str] = field(default_factory=dict)  # to apply to the symbol pins
 
 
 def _builder(family: str):
@@ -35,7 +35,7 @@ def _builder(family: str):
     if family == "tab":
         from .families import tab
         return tab.build
-    raise UnsupportedPackage(f"Familia '{family}' sin generador de footprint.")
+    raise UnsupportedPackage(f"No footprint generator for family '{family}'.")
 
 
 def _renumber(text: str, old: str, new: str) -> str:
@@ -68,7 +68,7 @@ def generate_footprint(pkg: Package, lib_name: str, out_dir: Path,
 
 
 def copy_official(lib_id: str, kicad: KicadInstall, dest_dir: Path) -> Path:
-    """Copia un footprint oficial (para el preview)."""
+    """Copies an official footprint (for the preview)."""
     lib, name = lib_id.split(":", 1)
     src = kicad.footprint_dir / f"{lib}.pretty" / f"{name}.kicad_mod"
     dest_dir.mkdir(parents=True, exist_ok=True)

@@ -1,7 +1,7 @@
-"""Match de un footprint generado contra la librería oficial de KiCad.
+"""Matches a generated footprint against the official KiCad library.
 
-Se compara la geometría de los pads (número, posición y tamaño, normalizados al centro del
-conjunto de pads), no el nombre: así da igual cómo el datasheet llame al package.
+The pad geometry is compared (number, position and size, normalized to the center of the
+pad set), not the name, so it does not matter what the datasheet calls the package.
 """
 from __future__ import annotations
 
@@ -23,10 +23,10 @@ _PAD_RE = re.compile(
     r'\(at\s+(-?[\d.]+)\s+(-?[\d.]+)(?:\s+(-?[\d.]+))?\)\s*'
     r'\(size\s+([\d.]+)\s+([\d.]+)\)')
 
-# Tolerancias (mm) para aceptar un footprint oficial como equivalente.
+# Tolerances (mm) for accepting an official footprint as equivalent.
 TOLERANCES = {
-    "ipc": {"pos": 0.10, "size": 0.15, "ep_size": 0.35},   # gullwing / nolead (mismo generador)
-    "tab": {"pos": 0.30, "size": 0.70, "ep_size": 0.90},   # los oficiales de tab son manuales
+    "ipc": {"pos": 0.10, "size": 0.15, "ep_size": 0.35},   # gullwing / nolead (same generator)
+    "tab": {"pos": 0.30, "size": 0.70, "ep_size": 0.90},   # the official tab footprints are hand-made
 }
 
 Pad = tuple[str, float, float, float, float]  # number, x, y, w, h
@@ -36,7 +36,7 @@ def parse_pads(text: str) -> list[Pad]:
     pads = []
     for num, _kind, x, y, rot, w, h in _PAD_RE.findall(text):
         if not num:
-            continue  # pads de pasta / sin conexión
+            continue  # paste-only / unconnected pads
         w_f, h_f = float(w), float(h)
         if rot and round(float(rot)) % 180 == 90:
             w_f, h_f = h_f, w_f
@@ -75,14 +75,14 @@ def load_index(kicad: KicadInstall) -> dict[str, list[Pad]]:
 @dataclass
 class LibMatch:
     lib_id: str           # "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"
-    pos_err: float        # máximo desvío de posición de pads (mm)
-    size_err: float       # máximo desvío de tamaño de pads comunes (mm)
-    ep_size_err: float    # desvío de tamaño del pad más grande (EP / tab)
+    pos_err: float        # max pad position deviation (mm)
+    size_err: float       # max size deviation of regular pads (mm)
+    ep_size_err: float    # size deviation of the largest pad (EP / tab)
     accepted: bool
 
     def describe(self) -> str:
-        verdict = "equivalente" if self.accepted else "descartado"
-        return (f"{self.lib_id} ({verdict}: posición ±{self.pos_err:.2f} mm, "
+        verdict = "equivalent" if self.accepted else "rejected"
+        return (f"{self.lib_id} ({verdict}: position ±{self.pos_err:.2f} mm, "
                 f"pads ±{self.size_err:.2f} mm, EP/tab ±{self.ep_size_err:.2f} mm)")
 
 
@@ -106,7 +106,7 @@ def _compare(a: list[Pad], b: list[Pad]) -> tuple[float, float, float]:
 
 
 def _name_rank(lib_id: str, preferred_name: str) -> int:
-    """0 = mismo nombre, 1 = mismo tipo de package (prefijo antes del primer '-'), 2 = otro."""
+    """0 = same name, 1 = same package type (prefix before the first '-'), 2 = other."""
     name = lib_id.split(":", 1)[1]
     if name == preferred_name:
         return 0
@@ -116,10 +116,10 @@ def _name_rank(lib_id: str, preferred_name: str) -> int:
 
 def find_match(generated_text: str, kicad: KicadInstall, family: str,
                preferred_name: str = "") -> Optional[LibMatch]:
-    """Devuelve el footprint oficial más parecido (aceptado o no), o None si no hay candidatos.
+    """Returns the closest official footprint (accepted or not), or None if there are no candidates.
 
-    Entre candidatos aceptados se prefiere el de nombre igual o del mismo tipo de package
-    (QFN vs LQFN pueden tener pads idénticos), después el de menor error.
+    Among accepted candidates, the one with the same name or package type is preferred
+    (QFN and LQFN can have identical pads), then the one with the smallest error.
     """
     pads = parse_pads(generated_text)
     if not pads:

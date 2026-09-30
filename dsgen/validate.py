@@ -1,7 +1,7 @@
-"""Chequeos de sanidad sobre lo extraído por la IA.
+"""Sanity checks on what the AI extracted.
 
-Los errores (`error`) disparan un reintento de la extracción y se marcan en rojo en la GUI;
-las advertencias (`warning`) solo se muestran.
+Errors (`error`) trigger a retry of the extraction and are shown in red in the GUI;
+warnings (`warning`) are only displayed.
 """
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ def check(c: Component) -> list[Issue]:
         return issues
     issues += _check_pins(c)
     if c.package is None:
-        issues.append(Issue("error", "package", "Falta el package."))
+        issues.append(Issue("error", "package", "The package is missing."))
     else:
         issues += _check_package(c.package)
         issues += _check_pins_vs_package(c)
@@ -42,29 +42,29 @@ def errors_as_feedback(issues: list[Issue]) -> list[str]:
 def _check_pins(c: Component) -> list[Issue]:
     issues = []
     if not c.pins:
-        return [Issue("error", "pins", "No se extrajo ningún pin.")]
+        return [Issue("error", "pins", "No pins were extracted.")]
     counts = Counter(p.number for p in c.pins)
     for number, n in counts.items():
         if n > 1:
-            issues.append(Issue("error", "pins", f"El número de pin {number} aparece {n} veces."))
+            issues.append(Issue("error", "pins", f"Pin number {number} appears {n} times."))
     for i, p in enumerate(c.pins):
         if not p.name.strip():
-            issues.append(Issue("error", f"pins[{i}]", f"El pin {p.number} no tiene nombre."))
+            issues.append(Issue("error", f"pins[{i}]", f"Pin {p.number} has no name."))
     return issues
 
 
 def _check_dim(name: str, d: Dim, required: bool) -> list[Issue]:
     if not d.has_value():
-        return [Issue("error" if required else "warning", f"package.{name}", "Falta el valor.")]
+        return [Issue("error" if required else "warning", f"package.{name}", "Value missing.")]
     issues = []
     values = [v for v in (d.min, d.nom, d.max) if v is not None]
     if values != sorted(values):
-        issues.append(Issue("error", f"package.{name}", f"No se cumple min ≤ nom ≤ max ({d})."))
+        issues.append(Issue("error", f"package.{name}", f"min ≤ nom ≤ max does not hold ({d})."))
     if any(v <= 0 for v in values):
-        issues.append(Issue("error", f"package.{name}", "Valor no positivo."))
+        issues.append(Issue("error", f"package.{name}", "Non-positive value."))
     if any(v > 60 for v in values):
         issues.append(Issue("error", f"package.{name}",
-                            "Valor > 60 mm: ¿está en mils o pulgadas en vez de mm?"))
+                            "Value > 60 mm: is it in mils or inches instead of mm?"))
     return issues
 
 
@@ -72,7 +72,7 @@ def _check_package(pkg: Package) -> list[Issue]:
     issues: list[Issue] = []
     if pkg.family == "other":
         return [Issue("warning", "package.family",
-                      "Familia no soportada: no se generará footprint (solo match con la librería).")]
+                      "Unsupported family: no footprint will be generated (library match only).")]
     issues += _check_dim("body_x", pkg.body_x, True)
     issues += _check_dim("body_y", pkg.body_y, True)
     issues += _check_dim("lead_width", pkg.lead_width, True)
@@ -82,7 +82,7 @@ def _check_package(pkg: Package) -> list[Issue]:
     if pkg.family == "gullwing" and pkg.num_pins_x > 0:
         issues += _check_dim("overall_y", pkg.overall_y, True)
     if pkg.pitch is None or pkg.pitch <= 0:
-        issues.append(Issue("error", "package.pitch", "Falta el pitch."))
+        issues.append(Issue("error", "package.pitch", "The pitch is missing."))
         return issues
 
     positions = 2 * (pkg.num_pins_x + pkg.num_pins_y)
@@ -90,40 +90,40 @@ def _check_package(pkg: Package) -> list[Issue]:
         positions = pkg.num_pins_y
     if positions - len(pkg.deleted_pins) != pkg.pin_count:
         issues.append(Issue("error", "package.num_pins_x/num_pins_y",
-                            f"La grilla ({positions} posiciones - {len(pkg.deleted_pins)} borradas) "
-                            f"no coincide con pin_count={pkg.pin_count}."))
+                            f"The grid ({positions} positions - {len(pkg.deleted_pins)} deleted) "
+                            f"does not match pin_count={pkg.pin_count}."))
 
-    # Las filas de pines tienen que entrar en el cuerpo.
+    # The pin rows must fit in the body.
     for n, body, name in ((pkg.num_pins_y, pkg.body_y, "body_y"), (pkg.num_pins_x, pkg.body_x, "body_x")):
         size = body.hi()
         if n > 1 and size is not None and pkg.pitch * (n - 1) >= size + 0.5:
             issues.append(Issue("error", f"package.{name}",
-                                f"{n} pines a pitch {pkg.pitch} ocupan {pkg.pitch * (n - 1):.2f} mm, "
-                                f"más que el cuerpo ({size} mm). ¿Pitch o cantidad por lado mal?"))
+                                f"{n} pins at pitch {pkg.pitch} span {pkg.pitch * (n - 1):.2f} mm, "
+                                f"more than the body ({size} mm). Wrong pitch or pins per side?"))
     lw = pkg.lead_width.hi()
     if lw is not None and pkg.num_pins_y > 1 and lw >= pkg.pitch:
-        issues.append(Issue("error", "package.lead_width", f"Ancho de terminal {lw} ≥ pitch {pkg.pitch}."))
+        issues.append(Issue("error", "package.lead_width", f"Lead width {lw} ≥ pitch {pkg.pitch}."))
 
     if pkg.family in ("gullwing", "tab"):
         ov, bx = pkg.overall_x.lo(), pkg.body_x.hi()
         if ov is not None and bx is not None and ov <= bx:
             issues.append(Issue("error", "package.overall_x",
-                                f"overall_x ({ov}) debe ser mayor que body_x ({bx}); ¿E y E1 invertidos?"))
+                                f"overall_x ({ov}) must be larger than body_x ({bx}); are E and E1 swapped?"))
 
     if pkg.ep:
         for axis, body in (("x", pkg.body_x), ("y", pkg.body_y)):
             ep_d: Dim = getattr(pkg.ep, axis)
             if not ep_d.has_value():
-                issues.append(Issue("error", f"package.ep.{axis}", "Falta el tamaño del EP."))
+                issues.append(Issue("error", f"package.ep.{axis}", "The EP size is missing."))
             elif body.lo() is not None and (ep_d.hi() or 0) >= body.lo():
-                issues.append(Issue("error", f"package.ep.{axis}", "El EP es más grande que el cuerpo."))
+                issues.append(Issue("error", f"package.ep.{axis}", "The EP is larger than the body."))
     if pkg.family == "tab" and pkg.tab is None:
-        issues.append(Issue("error", "package.tab", "Package con tab pero faltan las medidas del tab."))
+        issues.append(Issue("error", "package.tab", "Tab package but the tab dimensions are missing."))
     return issues
 
 
 def lead_numbers(pkg: Package) -> list[str]:
-    """Números de los leads físicos. En la familia tab no se renumera: número = posición."""
+    """Numbers of the physical leads. The tab family is not renumbered: number = position."""
     if pkg.family == "tab":
         return [str(i) for i in range(1, pkg.num_pins_y + 1) if i not in pkg.deleted_pins]
     return [str(i) for i in range(1, pkg.pin_count + 1)]
@@ -135,13 +135,13 @@ def _check_pins_vs_package(c: Component) -> list[Issue]:
     expected = pkg.pin_count + (1 if pkg.ep else 0) + (1 if pkg.tab else 0)
     numbers = {p.number for p in c.pins}
     issues = []
-    # Con EP/tab el número puede coincidir con un lead existente (p.ej. SOT-223 con tab = pin 2).
+    # An EP/tab may share its number with an existing lead (e.g. SOT-223 with tab = pin 2).
     shared = sum(1 for extra in (pkg.ep, pkg.tab) if extra and extra.number in lead_numbers(pkg))
     if len(numbers) != expected - shared:
         issues.append(Issue("error", "pins",
-                            f"Hay {len(numbers)} números de pin distintos pero el package tiene "
+                            f"There are {len(numbers)} distinct pin numbers but the package has "
                             f"{expected - shared} pads."))
     for extra, label in ((pkg.ep, "EP"), (pkg.tab, "tab")):
         if extra and extra.number not in numbers:
-            issues.append(Issue("error", "pins", f"El {label} (pin {extra.number}) no está en la lista de pines."))
+            issues.append(Issue("error", "pins", f"The {label} (pin {extra.number}) is not in the pin list."))
     return issues

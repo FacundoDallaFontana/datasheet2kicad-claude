@@ -1,4 +1,4 @@
-"""Caché de extracciones: evita volver a llamar a Claude para el mismo PDF + part number."""
+"""Extraction cache: avoids calling Claude again for the same PDF + part number."""
 from __future__ import annotations
 
 import hashlib
@@ -8,8 +8,8 @@ from pathlib import Path
 from .schema import Component
 
 CACHE_DIR = Path.home() / ".dsgen" / "cache"
-# Subir cuando cambie prompts/extract_component.md o el schema: invalida la caché vieja.
-PROMPT_VERSION = "1"
+# Bump when prompts/extract_component.md or the schema change: invalidates the old cache.
+PROMPT_VERSION = "2"
 
 
 def _key(pdf_path: Path, part_number: str) -> str:

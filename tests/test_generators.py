@@ -1,7 +1,7 @@
-"""Tests de generadores sin IA: packages estándar con dimensiones JEDEC conocidas.
+"""Generator tests without AI: standard packages with known JEDEC dimensions.
 
-Cada caso tiene que (a) generar un footprint, (b) coincidir con el footprint oficial esperado
-de KiCad y (c) producir archivos que kicad-cli pueda abrir.
+Each case must (a) generate a footprint, (b) match the expected official KiCad footprint and
+(c) produce files that kicad-cli can open.
 """
 from __future__ import annotations
 
@@ -98,7 +98,7 @@ def test_validate_ok():
 
 def test_validate_catches_errors():
     c = _ne555()
-    c.pins[1].number = "1"                     # número duplicado
+    c.pins[1].number = "1"                     # duplicated number
     c.package = SOIC8.model_copy(update={"pitch": 2.54, "overall_x": D(3.0, None, 3.5)})
     fields = {i.field for i in check(c) if i.severity == "error"}
     assert "pins" in fields and "package.overall_x" in fields and "package.body_y" in fields

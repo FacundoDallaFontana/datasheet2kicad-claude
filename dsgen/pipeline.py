@@ -1,4 +1,4 @@
-"""Orquestación: PDF + part number -> Component (IA) -> símbolo + footprint."""
+"""Orchestration: PDF + part number -> Component (AI) -> symbol + footprint."""
 from __future__ import annotations
 
 import json
@@ -22,16 +22,16 @@ Log = Callable[[str], None]
 def extract_component(pdf: Path, part_number: str, model: str = "sonnet", force: bool = False,
                       log: Log = print) -> tuple[Component, list[Issue]]:
     if not force and (cached := cache.load(pdf, part_number)):
-        log("Usando extracción cacheada (marcá 'forzar re-extracción' para volver a llamar a Claude).")
+        log("Using the cached extraction (check 'Force re-extraction' to call Claude again).")
         return cached, check(cached)
 
     hints = find_relevant_pages(pdf, part_number)
-    log(f"PDF de {hints.page_count} páginas; páginas relevantes: {hints.as_ranges() or 'ninguna detectada'}")
+    log(f"PDF with {hints.page_count} pages; relevant pages: {hints.as_ranges() or 'none detected'}")
     component = extract(pdf, part_number, model=model, hints=hints, log=log)
     issues = check(component)
 
     if component.status == "ok" and (feedback := errors_as_feedback(issues)):
-        log(f"Chequeos de sanidad con {len(feedback)} errores; reintentando con correcciones:")
+        log(f"Sanity checks found {len(feedback)} errors; retrying with corrections:")
         for msg in feedback:
             log(f"  - {msg}")
         retry = extract(pdf, part_number, model=model, hints=hints, feedback=feedback, log=log)
@@ -62,7 +62,7 @@ def generate(component: Component, out_dir: Path, lib_name: str = "dsgen",
     kicad = find_kicad()
     messages: list[str] = []
     if kicad is None:
-        messages.append("No se encontró KiCad: se genera el footprint sin comparar con la librería oficial.")
+        messages.append("KiCad not found: the footprint is generated without comparing it to the official library.")
 
     fp: Optional[FootprintResult] = None
     pins_component = component
@@ -70,25 +70,25 @@ def generate(component: Component, out_dir: Path, lib_name: str = "dsgen",
         try:
             fp = generate_footprint(component.package, lib_name, out_dir, kicad, use_official)
             if fp.generated_path:
-                messages.append(f"Footprint generado: {fp.generated_path.name}")
+                messages.append(f"Generated footprint: {fp.generated_path.name}")
                 if fp.match:
-                    messages.append(f"Oficial más parecido: {fp.match.describe()}")
+                    messages.append(f"Closest official footprint: {fp.match.describe()}")
             else:
-                messages.append(f"Se usa el footprint oficial: {fp.match.describe() if fp.match else fp.lib_id}")
+                messages.append(f"Using the official footprint: {fp.match.describe() if fp.match else fp.lib_id}")
             if fp.pin_renames:
-                messages.append(f"Pines renumerados para coincidir con el footprint oficial: {fp.pin_renames}")
+                messages.append(f"Pins renumbered to match the official footprint: {fp.pin_renames}")
                 pins_component = component.model_copy(deep=True)
                 for p in pins_component.pins:
                     p.number = fp.pin_renames.get(p.number, p.number)
         except UnsupportedPackage as e:
-            messages.append(f"{e} El símbolo queda sin footprint asignado.")
+            messages.append(f"{e} The symbol has no footprint assigned.")
 
     symbol_lib = generate_symbol(pins_component, out_dir / f"{lib_name}.kicad_sym", fp.lib_id if fp else "")
-    messages.append(f"Símbolo '{component.symbol_name or component.part_number}' en {symbol_lib.name}")
+    messages.append(f"Symbol '{component.symbol_name or component.part_number}' in {symbol_lib.name}")
 
     json_path = out_dir / f"{_safe_name(component.symbol_name or component.part_number)}.component.json"
     json_path.write_text(json.dumps(component.model_dump(), indent=2, ensure_ascii=False), encoding="utf-8")
-    messages.append(f"Datos extraídos guardados en {json_path.name} (editable, se puede re-generar)")
+    messages.append(f"Extracted data saved to {json_path.name} (editable, can be regenerated)")
     for m in messages:
         log(m)
     return GenerateResult(symbol_lib, json_path, fp, messages)

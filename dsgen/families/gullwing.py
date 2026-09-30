@@ -1,4 +1,4 @@
-"""SOIC / SSOP / TSSOP / QFP / SOT-23 con el generador IPC gullwing oficial."""
+"""SOIC / SSOP / TSSOP / QFP / SOT-23 with the official IPC gullwing generator."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -27,7 +27,7 @@ def to_spec(pkg: Package) -> dict:
         spec["body_height"] = tol(pkg.body_height)
     if pkg.deleted_pins:
         spec["deleted_pins"] = list(pkg.deleted_pins)
-        # Nombre estilo librería oficial ('SOT-23-5') en vez de 'SOT-6-5_...'.
+        # Official-library style name ('SOT-23-5') instead of 'SOT-6-5_...'.
         spec["custom_name_format"] = pkg.name.split()[0].upper()
     if pkg.ep:
         spec["EP_size_x"] = tol(pkg.ep.x)

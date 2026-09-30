@@ -1,6 +1,6 @@
-"""Contrato entre la extracción con IA y los generadores de símbolo/footprint.
+"""Contract between the AI extraction and the symbol/footprint generators.
 
-Todas las dimensiones están en milímetros.
+All dimensions are in millimeters.
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ Family = Literal["gullwing", "nolead", "tab", "other"]
 
 
 class Dim(BaseModel):
-    """Dimensión con tolerancia tal como aparece en la tabla del datasheet."""
+    """A toleranced dimension as it appears in the datasheet table."""
     min: Optional[float] = None
     nom: Optional[float] = None
     max: Optional[float] = None
@@ -47,47 +47,47 @@ class Dim(BaseModel):
 
 
 class Pin(BaseModel):
-    number: str = Field(description="Número de pin/pad tal como en el pinout (EP incluido).")
-    name: str = Field(description="Nombre del pin; usar ~{X} para señales activas en bajo.")
+    number: str = Field(description="Pin/pad number as in the pinout (EP included).")
+    name: str = Field(description="Pin name; use ~{X} for active-low signals.")
     type: PinType
-    side: Side = Field(description="Lado del símbolo donde va el pin.")
-    unit: int = Field(1, description="Unidad del símbolo (1 salvo partes multi-unidad).")
+    side: Side = Field(description="Side of the symbol where the pin goes.")
+    unit: int = Field(1, description="Symbol unit (1 unless it is a multi-unit part).")
     style: PinStyle = "line"
     hidden: bool = False
     description: str = ""
 
 
 class ExposedPad(BaseModel):
-    number: str = Field(description="Número de pin asignado al EP/thermal pad.")
+    number: str = Field(description="Pin number assigned to the EP/thermal pad.")
     x: Dim
     y: Dim
 
 
 class Tab(BaseModel):
-    """Tab de disipación de SOT-223 / TO-252 / TO-263."""
-    number: str = Field(description="Número de pin del tab.")
-    width: Dim = Field(description="Ancho del tab (a lo largo del eje de los pines).")
-    length: Dim = Field(description="Largo del metal expuesto del tab medido desde el borde exterior.")
+    """Heatsink tab of SOT-223 / TO-252 / TO-263."""
+    number: str = Field(description="Pin number of the tab.")
+    width: Dim = Field(description="Tab width (along the pin axis).")
+    length: Dim = Field(description="Length of the exposed tab metal measured from the outer edge.")
 
 
 class Package(BaseModel):
     family: Family = Field(description="gullwing: SOIC/SSOP/TSSOP/QFP/SOT-23; nolead: QFN/DFN/SON; "
-                                       "tab: SOT-223/TO-252/TO-263; other: no soportado.")
-    name: str = Field(description="Nombre del package en el datasheet, p.ej. 'VQFN-16 (RGT)'.")
-    jedec: Optional[str] = Field(None, description="Referencia JEDEC si aparece (MO-220, MS-012...).")
-    pin_count: int = Field(description="Cantidad de terminales físicos, sin contar EP ni tab.")
+                                       "tab: SOT-223/TO-252/TO-263; other: not supported.")
+    name: str = Field(description="Package name in the datasheet, e.g. 'VQFN-16 (RGT)'.")
+    jedec: Optional[str] = Field(None, description="JEDEC reference if given (MO-220, MS-012...).")
+    pin_count: int = Field(description="Number of physical terminals, excluding EP and tab.")
     pitch: Optional[float] = None
-    num_pins_x: int = Field(0, description="Pines en cada fila horizontal (arriba/abajo). 0 en packages duales.")
-    num_pins_y: int = Field(0, description="Pines en cada columna vertical (izq./der.).")
+    num_pins_x: int = Field(0, description="Pins on each horizontal row (top/bottom). 0 for dual packages.")
+    num_pins_y: int = Field(0, description="Pins on each vertical column (left/right).")
     deleted_pins: list[int] = Field(default_factory=list,
-                                    description="Posiciones vacías de la grilla (p.ej. SOT-23-5 → [5]).")
-    body_x: Dim = Field(description="Ancho del cuerpo perpendicular a las filas de pines duales (E1).")
-    body_y: Dim = Field(description="Largo del cuerpo (D).")
-    overall_x: Dim = Field(default_factory=Dim, description="Punta a punta de terminales en X (E). Gullwing/tab.")
-    overall_y: Dim = Field(default_factory=Dim, description="Punta a punta en Y (D total). Solo QFP.")
-    body_height: Dim = Field(default_factory=Dim, description="Altura total (A).")
-    lead_width: Dim = Field(description="Ancho del terminal (b).")
-    lead_len: Dim = Field(description="Largo del pie/terminal que toca el PCB (L).")
+                                    description="Empty grid positions (e.g. SOT-23-5 → [5]).")
+    body_x: Dim = Field(description="Body width perpendicular to the dual pin rows (E1).")
+    body_y: Dim = Field(description="Body length (D).")
+    overall_x: Dim = Field(default_factory=Dim, description="Lead tip to lead tip in X (E). Gullwing/tab.")
+    overall_y: Dim = Field(default_factory=Dim, description="Tip to tip in Y (total D). QFP only.")
+    body_height: Dim = Field(default_factory=Dim, description="Total height (A).")
+    lead_width: Dim = Field(description="Terminal width (b).")
+    lead_len: Dim = Field(description="Length of the foot/terminal touching the PCB (L).")
     ep: Optional[ExposedPad] = None
     tab: Optional[Tab] = None
     confidence: Confidence = "medium"
@@ -102,15 +102,15 @@ class SourcePages(BaseModel):
 
 class Component(BaseModel):
     status: Literal["ok", "part_not_found", "ambiguous"]
-    part_number: str = Field(description="Código de pedido completo pedido por el usuario.")
-    symbol_name: str = Field("", description="Nombre del símbolo (código sin sufijo de embalaje).")
+    part_number: str = Field(description="Full orderable part number requested by the user.")
+    symbol_name: str = Field("", description="Symbol name (part number without the packaging suffix).")
     manufacturer: str = ""
     description: str = ""
     keywords: str = ""
     datasheet_url: str = ""
-    reference: str = Field("U", description="Prefijo de referencia: U, Q, D...")
+    reference: str = Field("U", description="Reference prefix: U, Q, D...")
     candidates: list[str] = Field(default_factory=list,
-                                  description="Si status != ok: códigos de pedido existentes parecidos.")
+                                  description="If status != ok: similar orderable part numbers that exist.")
     pins: list[Pin] = Field(default_factory=list)
     pins_confidence: Confidence = "medium"
     package: Optional[Package] = None
@@ -132,6 +132,6 @@ def _inline_refs(node, defs):
 
 
 def component_json_schema() -> dict:
-    """JSON Schema autocontenido (sin $ref) para pasarle a `claude --json-schema`."""
+    """Self-contained JSON Schema (no $ref) to pass to `claude --json-schema`."""
     schema = Component.model_json_schema()
     return _inline_refs(schema, schema.get("$defs", {}))

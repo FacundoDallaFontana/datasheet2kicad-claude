@@ -1,7 +1,7 @@
-"""Traducción de `Package` a cada generador de footprint.
+"""Translation of `Package` into each footprint generator.
 
-Cada familia expone `build(pkg, out_dir) -> Path` que escribe un único .kicad_mod en
-`out_dir` (carpeta temporal) y devuelve su ruta.
+Each family exposes `build(pkg, out_dir) -> Path`, which writes a single .kicad_mod into
+`out_dir` (a temporary folder) and returns its path.
 """
 from __future__ import annotations
 
@@ -15,17 +15,17 @@ _initialized_for: Path | None = None
 
 
 def init_kfg(out_dir: Path) -> None:
-    """Inicializa el estado global de kicad-footprint-generator.
+    """Initializes the global state of kicad-footprint-generator.
 
-    Debe llamarse antes de importar `generators.package.*` (leen CLI_ARGS al importarse).
+    Must be called before importing `generators.package.*` (they read CLI_ARGS at import time).
     """
     global _initialized_for
     import generators
     from generators.tools import cli_args
 
     if _initialized_for is not None:
-        # Los módulos del generador hacen `from cli_args import CLI_ARGS`: hay que mutar
-        # ese mismo objeto, no reemplazarlo.
+        # The generator modules do `from cli_args import CLI_ARGS`: that same object has to be
+        # mutated, not replaced.
         cli_args.CLI_ARGS.output_dir_footprints = out_dir
         _initialized_for = out_dir
         return
@@ -39,7 +39,7 @@ def init_kfg(out_dir: Path) -> None:
 
 
 def tol(d: Dim) -> dict:
-    """Dim -> formato TolerancedSize de los YAML de kicad-footprint-generator."""
+    """Dim -> TolerancedSize format of the kicad-footprint-generator YAML files."""
     out = {}
     if d.min is not None:
         out["minimum"] = d.min
@@ -61,5 +61,5 @@ def device_type(pkg_name: str, fallback: str) -> str:
 def single_output(out_dir: Path) -> Path:
     files = list(out_dir.rglob("*.kicad_mod"))
     if len(files) != 1:
-        raise RuntimeError(f"Se esperaba un footprint generado y hay {len(files)} en {out_dir}")
+        raise RuntimeError(f"Expected one generated footprint, found {len(files)} in {out_dir}")
     return files[0]

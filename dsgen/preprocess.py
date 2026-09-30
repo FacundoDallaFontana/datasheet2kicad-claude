@@ -1,7 +1,7 @@
-"""Detección de páginas relevantes del datasheet con PyMuPDF.
+"""Finds the relevant pages of the datasheet with PyMuPDF.
 
-Reduce lo que el agente tiene que leer en datasheets largos: le pasamos las páginas
-candidatas de ordering / pinout / package como sugerencia.
+Cuts down what the agent has to read in long datasheets: we pass it the candidate
+ordering / pinout / package pages as a hint.
 """
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ KEYWORDS = {
     ],
 }
 
-# Páginas que se mandan como máximo por sección.
+# Maximum number of pages suggested per section.
 MAX_PAGES_PER_SECTION = 6
 
 
@@ -43,7 +43,7 @@ class PageHints:
         return sorted(pages)
 
     def as_ranges(self) -> str:
-        """Compacta [1,2,3,7,8] -> '1-3, 7-8'."""
+        """Compacts [1,2,3,7,8] -> '1-3, 7-8'."""
         pages = self.all_pages()
         if not pages:
             return ""
@@ -59,7 +59,7 @@ class PageHints:
 
 
 def _base_part(part_number: str) -> str:
-    """Quita sufijos de embalaje típicos para buscar el part number en el texto."""
+    """Strips common packaging suffixes to search for the part number in the text."""
     return re.sub(r"(/?(TR|T|R|RL|RL7|G4|PBF|-?REEL7?))$", "", part_number.strip(), flags=re.I)
 
 
@@ -82,10 +82,10 @@ def find_relevant_pages(pdf_path: Path, part_number: str) -> PageHints:
     for section, hits in scores.items():
         best = sorted(hits, reverse=True)[:MAX_PAGES_PER_SECTION]
         pages = sorted(p for _, p in best)
-        # El dibujo mecánico suele seguir a la página del título: incluir la siguiente.
+        # The mechanical drawing usually follows the title page: include the next one too.
         if section == "package":
             pages = sorted({q for p in pages for q in (p, p + 1) if q <= hints.page_count})
         hints.sections[section] = pages
-    # Las páginas donde aparece el código exacto suelen ser pocas y valiosas (ordering).
+    # Pages with the exact part number are usually few and valuable (ordering).
     hints.part_hits = hints.part_hits[:MAX_PAGES_PER_SECTION]
     return hints

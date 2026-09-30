@@ -1,7 +1,7 @@
-"""Detección de la instalación de KiCad y compatibilidad de formato de archivos.
+"""KiCad installation detection and file format compatibility.
 
-kicad-footprint-generator ya serializa en formato KiCad 10; si la instalación es más vieja
-bajamos la versión del archivo y quitamos los tokens que no entiende.
+kicad-footprint-generator already writes the KiCad 10 format; if the installation is older we
+lower the file version and remove the tokens it does not understand.
 """
 from __future__ import annotations
 
@@ -17,9 +17,9 @@ from typing import Optional
 
 CONFIG_FILE = Path.home() / ".dsgen" / "config.json"
 
-# Versión de formato .kicad_mod por versión mayor de KiCad.
+# .kicad_mod format version per KiCad major version.
 FP_FORMAT_VERSION = {8: "20240108", 9: "20241229"}
-# Tokens de footprint que solo existen desde KiCad 10 (se eliminan líneas completas).
+# Footprint tokens that only exist since KiCad 10 (whole lines are removed).
 V10_ONLY_FP_TOKENS = ("duplicate_pad_numbers_are_jumpers", "jumper_pad_groups")
 
 
@@ -79,7 +79,7 @@ def _version(cli: Path) -> str:
 
 @functools.lru_cache(maxsize=1)
 def find_kicad() -> Optional[KicadInstall]:
-    """Devuelve la instalación de KiCad más nueva encontrada, o None."""
+    """Returns the newest KiCad installation found, or None."""
     found = []
     for root in _candidate_roots():
         if (cli := _cli_in(root)):
@@ -103,7 +103,7 @@ def save_kicad_dir(root: Path) -> None:
 
 
 def downgrade_footprint(path: Path, kicad_major: int) -> None:
-    """Adapta un .kicad_mod en formato KiCad 10 a una versión anterior (in-place)."""
+    """Adapts a KiCad 10 format .kicad_mod to an older version (in place)."""
     if kicad_major >= 10 or kicad_major not in FP_FORMAT_VERSION:
         return
     text = path.read_text(encoding="utf-8")

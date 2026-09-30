@@ -1,2 +1,2 @@
-"""dsgen: generador de símbolos y footprints de KiCad a partir de datasheets."""
+"""dsgen: KiCad symbol and footprint generator from datasheets."""
 __version__ = "0.1.0"

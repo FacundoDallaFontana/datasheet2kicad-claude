@@ -1,4 +1,4 @@
-"""Registro de consumo de cada extracción con Claude en ~/.dsgen/usage.csv."""
+"""Log of every Claude extraction call in ~/.dsgen/usage.csv."""
 from __future__ import annotations
 
 import csv
@@ -12,7 +12,7 @@ FIELDS = ["timestamp", "pdf", "part_number", "model", "status", "attempt", "turn
 
 
 def record(pdf: Path, part_number: str, model: str, attempt: int, result: dict, status: str) -> dict:
-    """Agrega una fila a partir del evento `result` de `claude -p --output-format stream-json`."""
+    """Appends a row built from the `result` event of `claude -p --output-format stream-json`."""
     u = result.get("usage") or {}
     row = {
         "timestamp": datetime.now().isoformat(timespec="seconds"),
@@ -51,11 +51,11 @@ class Summary:
 
     def describe(self) -> str:
         if not self.calls:
-            return "Sin extracciones registradas todavía."
+            return "No extractions recorded yet."
         avg = self.cost_usd / self.parts if self.parts else 0
-        return (f"{self.calls} llamadas a Claude, {self.parts} componentes distintos · "
-                f"≈ USD {self.cost_usd:.2f} (promedio USD {avg:.3f}/componente) · "
-                f"tokens: {self.input_tokens + self.cache_tokens:,} entrada / {self.output_tokens:,} salida · "
+        return (f"{self.calls} Claude calls, {self.parts} distinct components · "
+                f"≈ USD {self.cost_usd:.2f} (avg USD {avg:.3f}/component) · "
+                f"tokens: {self.input_tokens + self.cache_tokens:,} in / {self.output_tokens:,} out · "
                 f"{self.seconds / 60:.1f} min")
 
 

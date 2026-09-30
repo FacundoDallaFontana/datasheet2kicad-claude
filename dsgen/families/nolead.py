@@ -1,4 +1,4 @@
-"""QFN / DFN / SON con el generador IPC no-lead oficial."""
+"""QFN / DFN / SON with the official IPC no-lead generator."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -27,7 +27,7 @@ def to_spec(pkg: Package) -> dict:
     if pkg.ep:
         spec["EP_size_x"] = tol(pkg.ep.x)
         spec["EP_size_y"] = tol(pkg.ep.y)
-        # El EP queda como pin_count+1 (convención KLC); footprint_gen lo renumera si hace falta.
+        # The EP stays as pin_count+1 (KLC convention); footprint_gen renumbers it if needed.
     return spec
 
 

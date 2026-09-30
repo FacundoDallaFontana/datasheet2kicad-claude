@@ -1,4 +1,4 @@
-"""component.json -> CSV de KiPart -> .kicad_sym"""
+"""component.json -> KiPart CSV -> .kicad_sym"""
 from __future__ import annotations
 
 import contextlib
@@ -17,14 +17,14 @@ HIDDEN_PROPS = ("Manufacturer", "MPN")
 
 
 def _clean(text: str, allow_comma: bool = False) -> str:
-    # KiPart no admite comas en nombres de pin/símbolo; tampoco saltos de línea.
+    # KiPart does not accept commas in pin/symbol names, nor line breaks.
     if not allow_comma:
         text = text.replace(",", "/")
     return " ".join(text.split())
 
 
 def _hide_props(lib_path: Path) -> None:
-    """KiPart deja visibles las propiedades propias; las ocultamos como en la librería oficial."""
+    """KiPart leaves custom properties visible; hide them as the official library does."""
     text = lib_path.read_text(encoding="utf-8")
     for prop in HIDDEN_PROPS:
         text = re.sub(rf'(\(property "{prop}" (?:(?!\(property ).)*?)\(hide no\)', r"\1(hide yes)",
@@ -53,13 +53,13 @@ def to_kipart_rows(c: Component, footprint: str) -> list[list[str]]:
 
 
 def generate_symbol(c: Component, lib_path: Path, footprint: str) -> Path:
-    """Agrega (o reemplaza) el símbolo en la librería `lib_path`."""
+    """Adds (or replaces) the symbol in the `lib_path` library."""
     lib_path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         csv_path = Path(tmp) / "part.csv"
         with csv_path.open("w", newline="", encoding="utf-8") as f:
             csv.writer(f).writerows(to_kipart_rows(c, footprint))
-        with contextlib.redirect_stdout(io.StringIO()):  # KiPart imprime "Created symbol library..."
+        with contextlib.redirect_stdout(io.StringIO()):  # KiPart prints "Created symbol library..."
             row_file_to_symbol_lib_file(
                 str(csv_path), str(lib_path),
                 sort_by="row", overwrite=True, merge=lib_path.exists(),

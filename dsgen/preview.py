@@ -1,4 +1,4 @@
-"""Preview de símbolo y footprint: kicad-cli exporta SVG y PyMuPDF lo rasteriza a PNG."""
+"""Symbol and footprint preview: kicad-cli exports SVG and PyMuPDF rasterizes it to PNG."""
 from __future__ import annotations
 
 import subprocess
@@ -26,7 +26,7 @@ def _svg_to_png(svg: Path, png: Path, max_px: int) -> Path:
 def _run(cmd: list[str]) -> None:
     r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode != 0:
-        raise RuntimeError(f"kicad-cli falló: {r.stdout}{r.stderr}")
+        raise RuntimeError(f"kicad-cli failed: {r.stdout}{r.stderr}")
 
 
 def symbol_png(kicad: KicadInstall, lib: Path, symbol: str, png: Path, max_px: int = 520) -> Optional[Path]:
