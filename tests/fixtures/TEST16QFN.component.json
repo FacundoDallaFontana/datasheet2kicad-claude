@@ -1,0 +1,251 @@
+{
+  "status": "ok",
+  "part_number": "TEST16QFNR",
+  "symbol_name": "TEST16QFN",
+  "manufacturer": "",
+  "description": "",
+  "keywords": "",
+  "datasheet_url": "",
+  "reference": "U",
+  "candidates": [],
+  "pins": [
+    {
+      "number": "1",
+      "name": "IO1",
+      "type": "bidirectional",
+      "side": "left",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "2",
+      "name": "IO2",
+      "type": "bidirectional",
+      "side": "left",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "3",
+      "name": "IO3",
+      "type": "bidirectional",
+      "side": "left",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "4",
+      "name": "IO4",
+      "type": "bidirectional",
+      "side": "left",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "5",
+      "name": "IO5",
+      "type": "bidirectional",
+      "side": "left",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "6",
+      "name": "IO6",
+      "type": "bidirectional",
+      "side": "left",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "7",
+      "name": "IO7",
+      "type": "bidirectional",
+      "side": "left",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "8",
+      "name": "IO8",
+      "type": "bidirectional",
+      "side": "left",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "9",
+      "name": "IO9",
+      "type": "bidirectional",
+      "side": "right",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "10",
+      "name": "IO10",
+      "type": "bidirectional",
+      "side": "right",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "11",
+      "name": "IO11",
+      "type": "bidirectional",
+      "side": "right",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "12",
+      "name": "IO12",
+      "type": "bidirectional",
+      "side": "right",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "13",
+      "name": "IO13",
+      "type": "bidirectional",
+      "side": "right",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "14",
+      "name": "IO14",
+      "type": "bidirectional",
+      "side": "right",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "15",
+      "name": "IO15",
+      "type": "bidirectional",
+      "side": "right",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "16",
+      "name": "IO16",
+      "type": "bidirectional",
+      "side": "right",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "EP",
+      "name": "GND",
+      "type": "power_in",
+      "side": "bottom",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    }
+  ],
+  "pins_confidence": "medium",
+  "package": {
+    "family": "nolead",
+    "name": "QFN-16",
+    "jedec": null,
+    "pin_count": 16,
+    "pitch": 0.5,
+    "num_pins_x": 4,
+    "num_pins_y": 4,
+    "deleted_pins": [],
+    "body_x": {
+      "min": 2.9,
+      "nom": 3.0,
+      "max": 3.1
+    },
+    "body_y": {
+      "min": 2.9,
+      "nom": 3.0,
+      "max": 3.1
+    },
+    "overall_x": {
+      "min": null,
+      "nom": null,
+      "max": null
+    },
+    "overall_y": {
+      "min": null,
+      "nom": null,
+      "max": null
+    },
+    "body_height": {
+      "min": null,
+      "nom": null,
+      "max": null
+    },
+    "lead_width": {
+      "min": 0.18,
+      "nom": null,
+      "max": 0.3
+    },
+    "lead_len": {
+      "min": 0.3,
+      "nom": null,
+      "max": 0.5
+    },
+    "ep": {
+      "number": "EP",
+      "x": {
+        "min": null,
+        "nom": 1.7,
+        "max": null
+      },
+      "y": {
+        "min": null,
+        "nom": 1.7,
+        "max": null
+      }
+    },
+    "tab": null,
+    "confidence": "medium",
+    "source_pages": []
+  },
+  "source_pages": {
+    "ordering": [],
+    "pinout": [],
+    "package": []
+  },
+  "notes": []
+}

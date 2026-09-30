@@ -1,0 +1,22 @@
+[project]
+name = "dsgen"
+version = "0.1.0"
+description = "Genera .kicad_sym y .kicad_mod a partir del datasheet PDF usando Claude Code"
+requires-python = ">=3.11"
+dependencies = [
+    "kipart>=2.8",
+    "pydantic>=2",
+    "pymupdf",
+    "pyyaml",
+    # kicad-footprint-generator (KicadModTree + generadores IPC) se instala desde vendor/,
+    # ver setup.ps1
+]
+
+[project.scripts]
+dsgen = "dsgen.__main__:main"
+
+[tool.setuptools]
+packages = ["dsgen", "dsgen.families"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

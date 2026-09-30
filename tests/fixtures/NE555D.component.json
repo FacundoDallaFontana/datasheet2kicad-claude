@@ -1,0 +1,149 @@
+{
+  "status": "ok",
+  "part_number": "NE555DR",
+  "symbol_name": "NE555D",
+  "manufacturer": "Texas Instruments",
+  "description": "Precision timer, SOIC-8",
+  "keywords": "",
+  "datasheet_url": "",
+  "reference": "U",
+  "candidates": [],
+  "pins": [
+    {
+      "number": "1",
+      "name": "GND",
+      "type": "power_in",
+      "side": "bottom",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "2",
+      "name": "TRIG",
+      "type": "input",
+      "side": "left",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "3",
+      "name": "OUT",
+      "type": "output",
+      "side": "right",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "4",
+      "name": "~{RESET}",
+      "type": "input",
+      "side": "left",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "5",
+      "name": "CONT",
+      "type": "input",
+      "side": "left",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "6",
+      "name": "THRES",
+      "type": "input",
+      "side": "left",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "7",
+      "name": "DISCH",
+      "type": "open_collector",
+      "side": "right",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    },
+    {
+      "number": "8",
+      "name": "VCC",
+      "type": "power_in",
+      "side": "top",
+      "unit": 1,
+      "style": "line",
+      "hidden": false,
+      "description": ""
+    }
+  ],
+  "pins_confidence": "medium",
+  "package": {
+    "family": "gullwing",
+    "name": "SOIC-8 (D)",
+    "jedec": null,
+    "pin_count": 8,
+    "pitch": 1.27,
+    "num_pins_x": 0,
+    "num_pins_y": 4,
+    "deleted_pins": [],
+    "body_x": {
+      "min": 3.8,
+      "nom": null,
+      "max": 4.0
+    },
+    "body_y": {
+      "min": 4.8,
+      "nom": null,
+      "max": 5.0
+    },
+    "overall_x": {
+      "min": 5.8,
+      "nom": null,
+      "max": 6.2
+    },
+    "overall_y": {
+      "min": null,
+      "nom": null,
+      "max": null
+    },
+    "body_height": {
+      "min": null,
+      "nom": null,
+      "max": 1.75
+    },
+    "lead_width": {
+      "min": 0.31,
+      "nom": null,
+      "max": 0.51
+    },
+    "lead_len": {
+      "min": 0.4,
+      "nom": null,
+      "max": 1.27
+    },
+    "ep": null,
+    "tab": null,
+    "confidence": "medium",
+    "source_pages": []
+  },
+  "source_pages": {
+    "ordering": [],
+    "pinout": [],
+    "package": []
+  },
+  "notes": []
+}
