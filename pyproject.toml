@@ -3,6 +3,7 @@ name = "dsgen"
 version = "0.1.0"
 description = "Genera .kicad_sym y .kicad_mod a partir del datasheet PDF usando Claude Code"
 requires-python = ">=3.11"
+license = "MIT"
 dependencies = [
     "kipart>=2.8",
     "pydantic>=2",

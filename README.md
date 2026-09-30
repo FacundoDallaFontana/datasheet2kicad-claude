@@ -157,3 +157,9 @@ footprints oficiales de KiCad y que `kicad-cli` pueda abrir todos los archivos g
   convierte automáticamente (`kicad_env.downgrade_footprint`).
 - En la familia tab, el land pattern se calcula con IPC-7351B nominal. Los footprints oficiales
   de SOT-223/DPAK están hechos a mano, así que el match con ellos es más tolerante (±0.3 mm).
+
+## Licencia
+
+[MIT](LICENSE). Las dependencias tienen sus propias licencias: KiPart es MIT y
+kicad-footprint-generator es GPL-3.0. Esta última no se incluye en el repo: `setup.ps1` la
+descarga en `vendor/`.
